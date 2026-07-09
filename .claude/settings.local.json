@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:aaronniehworkshop.com)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(node -e ' *)",
+      "Bash(npx --yes sharp-cli --version)",
+      "Bash(npx --yes sharp-cli --help)"
+    ]
+  }
+}

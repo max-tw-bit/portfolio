@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>作品編輯器 — Max</title>
+<style>
+  :root {
+    --white: #ffffff;
+    --black: #111111;
+    --grey: #6e6e6e;
+    --line: #d9d9d9;
+    --accent: #ff5a36;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: var(--white);
+    color: var(--black);
+    line-height: 1.6;
+    padding: 40px 24px 140px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 6px; }
+  .lead { color: var(--grey); font-size: 0.88rem; }
+  .lead b { color: var(--accent); }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px;
+    margin-top: 24px;
+  }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .card-head .num {
+    font-size: 0.78rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--grey);
+  }
+
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px 20px;
+    margin-bottom: 18px;
+  }
+  .field label {
+    display: block; font-size: 0.74rem; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--grey); margin-bottom: 5px;
+  }
+  .field input {
+    width: 100%; font-family: inherit; font-size: 0.92rem;
+    padding: 9px 11px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--white); color: var(--black);
+  }
+  .field input:focus { outline: none; border-color: var(--accent); }
+  .field.wide { grid-column: 1 / -1; }
+
+  /* WYSIWYG band — mirrors the real site row */
+  .band {
+    position: relative; height: 120px; overflow: hidden;
+    cursor: grab; user-select: none;
+    border: 1px solid var(--line); background: #f4f4f4;
+    margin-bottom: 6px;
+  }
+  .band.dragging { cursor: grabbing; }
+  .band-img { position: absolute; inset: 0; background-repeat: no-repeat; }
+  .band-row {
+    position: absolute; inset: 0; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 26px; pointer-events: none;
+  }
+  .band-title {
+    font-size: clamp(1.1rem, 3vw, 1.8rem); font-weight: 500; letter-spacing: -0.01em;
+    color: #eeeeee; mix-blend-mode: difference;
+  }
+  .band-meta {
+    font-size: 0.7rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #919191; mix-blend-mode: difference; white-space: nowrap;
+  }
+  .hint { font-size: 0.7rem; color: var(--grey); margin: 4px 2px 16px; }
+
+  .sliders {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px 24px;
+  }
+  .slider label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--grey); margin-bottom: 5px;
+  }
+  .slider label b { color: var(--black); font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); cursor: pointer; }
+
+  button {
+    font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 0.03em; padding: 9px 18px; border-radius: 6px;
+    border: 1px solid var(--black); background: var(--black); color: var(--white);
+    cursor: pointer; transition: opacity 0.2s ease;
+  }
+  button:hover { opacity: 0.82; }
+  .btn-ghost { background: none; color: var(--grey); border-color: var(--line); }
+  .btn-ghost:hover { color: var(--black); border-color: var(--black); opacity: 1; }
+  .btn-danger { background: none; color: #c0392b; border-color: #e6b3ac; padding: 6px 12px; font-size: 0.72rem; }
+  .btn-danger:hover { background: #c0392b; color: #fff; border-color: #c0392b; opacity: 1; }
+
+  .toolbar {
+    display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+    margin-top: 26px;
+  }
+
+  /* Sticky save bar */
+  .savebar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    background: rgba(255,255,255,0.96); backdrop-filter: blur(6px);
+    border-top: 1px solid var(--line);
+    padding: 14px 24px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .savebar .status { font-size: 0.82rem; color: var(--grey); }
+  .savebar .status.dirty { color: var(--accent); font-weight: 600; }
+  .savebar .status.saved { color: #2e7d32; font-weight: 600; }
+  .save-actions { display: flex; gap: 10px; }
+  .btn-save { padding: 11px 26px; font-size: 0.86rem; }
+
+  .note {
+    margin-top: 20px; font-size: 0.78rem; color: var(--grey);
+    background: #faf7f5; border: 1px solid #f0e2dc; border-radius: 8px; padding: 14px 16px;
+  }
+  .note b { color: var(--accent); }
+  a.inline { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>作品編輯器</h1>
+    <p class="lead">修改名稱 / 種類 / 年份，拖拉圖片或用拉桿調整顯示位置，完成後按下方 <b>儲存變更</b>。</p>
+
+    <div id="cards"></div>
+
+    <div class="toolbar">
+      <button class="btn-ghost" id="addBtn">＋ 新增作品</button>
+      <button class="btn-ghost" id="exportBtn">匯出 works.js（發布網站時用）</button>
+      <button class="btn-ghost" id="resetBtn">還原成預設作品</button>
+    </div>
+
+    <div class="note">
+      <b>怎麼運作：</b>按「儲存變更」會把內容存進<b>這個瀏覽器</b>，回到作品集首頁重新整理就會立刻看到更新——
+      不會跳存檔視窗、也不會動到任何檔案。<br><br>
+      <b>要正式發布網站給別人看時</b>，再按「匯出 works.js」下載一份，放進網站資料夾取代舊的
+      <b>works.js</b> 即可（這樣別人打開你的網站也會看到同樣內容）。
+    </div>
+  </div>
+
+  <div class="savebar">
+    <span class="status" id="status">尚未變更</span>
+    <div class="save-actions">
+      <button class="btn-ghost" id="reloadBtn">放棄變更</button>
+      <button class="btn-save" id="saveBtn">儲存變更</button>
+    </div>
+  </div>
+
+  <script src="works.js"></script>
+  <script>
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+    const STORAGE_KEY = "MAX_WORKS";
+
+    // 載入資料：優先用這個瀏覽器先前儲存的版本，否則用 works.js 的預設值
+    function loadInitial() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr) && arr.length) return arr;
+        }
+      } catch (_) {}
+      return Array.isArray(window.WORKS) ? window.WORKS : [];
+    }
+
+    let state = JSON.parse(JSON.stringify(loadInitial()));
+    let dirty = false;
+
+    const cardsEl = document.getElementById("cards");
+    const statusEl = document.getElementById("status");
+
+    function setDirty(v) {
+      dirty = v;
+      if (v) { statusEl.textContent = "有未儲存的變更"; statusEl.className = "status dirty"; }
+      else { statusEl.textContent = "尚未變更"; statusEl.className = "status"; }
+    }
+
+    function parsePos(pos) {
+      const m = String(pos || "50% 50%").match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+      return m ? { x: +m[1], y: +m[2] } : { x: 50, y: 50 };
+    }
+    function parseSize(size) {
+      const m = String(size || "100%").match(/(\d+(?:\.\d+)?)%/);
+      return m ? +m[1] : 100;
+    }
+
+    function renderAll() {
+      cardsEl.innerHTML = "";
+      state.forEach((w, i) => cardsEl.appendChild(buildCard(w, i)));
+    }
+
+    function buildCard(w, i) {
+      const p = parsePos(w.pos);
+      const size = parseSize(w.size);
+
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <div class="card-head">
+          <span class="num">作品 ${i + 1}</span>
+          <button class="btn-danger del">刪除</button>
+        </div>
+        <div class="fields">
+          <div class="field wide">
+            <label>作品名稱</label>
+            <input class="f-title" type="text" value="">
+          </div>
+          <div class="field">
+            <label>作品種類</label>
+            <input class="f-type" type="text" value="">
+          </div>
+          <div class="field">
+            <label>年份</label>
+            <input class="f-year" type="text" value="">
+          </div>
+          <div class="field wide">
+            <label>圖片路徑（例如 images/xxx.jpg）</label>
+            <input class="f-image" type="text" value="">
+          </div>
+          <div class="field wide">
+            <label>點擊後前往的頁面（例如 project-1.html，沒有可留 #）</label>
+            <input class="f-link" type="text" value="">
+          </div>
+        </div>
+        <div class="band">
+          <div class="band-img"></div>
+          <div class="band-row">
+            <span class="band-title"></span>
+            <span class="band-meta"></span>
+          </div>
+        </div>
+        <p class="hint">← 在圖片上按住拖拉即可移動顯示位置 →</p>
+        <div class="sliders">
+          <div class="slider">
+            <label>水平位置 X <b class="vx"></b></label>
+            <input type="range" class="rx" min="0" max="100" step="1">
+          </div>
+          <div class="slider">
+            <label>垂直位置 Y <b class="vy"></b></label>
+            <input type="range" class="ry" min="0" max="100" step="1">
+          </div>
+          <div class="slider">
+            <label>縮放 Size <b class="vs"></b></label>
+            <input type="range" class="rs" min="100" max="260" step="5">
+          </div>
+        </div>
+      `;
+
+      const q = (s) => card.querySelector(s);
+      const fTitle = q(".f-title"), fType = q(".f-type"), fYear = q(".f-year"),
+            fImage = q(".f-image"), fLink = q(".f-link");
+      const band = q(".band"), bandImg = q(".band-img"),
+            bandTitle = q(".band-title"), bandMeta = q(".band-meta");
+      const rx = q(".rx"), ry = q(".ry"), rs = q(".rs");
+      const vx = q(".vx"), vy = q(".vy"), vs = q(".vs");
+
+      fTitle.value = w.title || "";
+      fType.value = w.type || "";
+      fYear.value = w.year || "";
+      fImage.value = w.image || "";
+      fLink.value = w.link || "";
+      rx.value = p.x; ry.value = p.y; rs.value = size;
+
+      const paint = () => {
+        bandImg.style.backgroundImage = `url('${w.image}')`;
+        bandImg.style.backgroundSize = `${w.__size}%`;
+        bandImg.style.backgroundPosition = `${w.__x}% ${w.__y}%`;
+        bandTitle.textContent = w.title || "作品名稱";
+        bandMeta.textContent = `${w.type || "種類"} — ${w.year || "年份"}`;
+        vx.textContent = w.__x + "%";
+        vy.textContent = w.__y + "%";
+        vs.textContent = w.__size + "%";
+      };
+
+      // 把數值存回 state（含格式化的 pos / size）
+      w.__x = p.x; w.__y = p.y; w.__size = size;
+      const commit = () => {
+        w.pos = `${w.__x}% ${w.__y}%`;
+        w.size = `${w.__size}%`;
+        setDirty(true);
+      };
+
+      fTitle.addEventListener("input", () => { w.title = fTitle.value; bandTitle.textContent = w.title || "作品名稱"; setDirty(true); });
+      fType.addEventListener("input", () => { w.type = fType.value; bandMeta.textContent = `${w.type || "種類"} — ${w.year || "年份"}`; setDirty(true); });
+      fYear.addEventListener("input", () => { w.year = fYear.value; bandMeta.textContent = `${w.type || "種類"} — ${w.year || "年份"}`; setDirty(true); });
+      fImage.addEventListener("input", () => { w.image = fImage.value; paint(); setDirty(true); });
+      fLink.addEventListener("input", () => { w.link = fLink.value; setDirty(true); });
+
+      rx.addEventListener("input", () => { w.__x = +rx.value; paint(); commit(); });
+      ry.addEventListener("input", () => { w.__y = +ry.value; paint(); commit(); });
+      rs.addEventListener("input", () => { w.__size = +rs.value; paint(); commit(); });
+
+      // 拖拉調整位置
+      let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      band.addEventListener("mousedown", (e) => {
+        dragging = true; band.classList.add("dragging");
+        sx = e.clientX; sy = e.clientY; ox = w.__x; oy = w.__y;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        const rect = band.getBoundingClientRect();
+        w.__x = clamp(Math.round(ox - (e.clientX - sx) / rect.width * 100), 0, 100);
+        w.__y = clamp(Math.round(oy - (e.clientY - sy) / rect.height * 100), 0, 100);
+        rx.value = w.__x; ry.value = w.__y;
+        paint(); commit();
+      });
+      window.addEventListener("mouseup", () => { dragging = false; band.classList.remove("dragging"); });
+
+      q(".del").addEventListener("click", () => {
+        if (!confirm(`確定要刪除「${w.title || "此作品"}」嗎？`)) return;
+        state.splice(i, 1);
+        renderAll();
+        setDirty(true);
+      });
+
+      paint();
+      return card;
+    }
+
+    document.getElementById("addBtn").addEventListener("click", () => {
+      state.push({
+        title: "新作品", type: "Branding", year: new Date().getFullYear().toString(),
+        image: "images/EVA/eva-hero.jpg", link: "#", pos: "50% 50%", size: "100%"
+      });
+      renderAll();
+      setDirty(true);
+      window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+    });
+
+    document.getElementById("reloadBtn").addEventListener("click", () => {
+      if (dirty && !confirm("放棄所有未儲存的變更？")) return;
+      state = JSON.parse(JSON.stringify(loadInitial()));
+      renderAll();
+      setDirty(false);
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("還原成 works.js 的預設作品？（會清除這個瀏覽器儲存的編輯內容）")) return;
+      try { localStorage.removeItem(STORAGE_KEY); } catch (_) {}
+      state = JSON.parse(JSON.stringify(Array.isArray(window.WORKS) ? window.WORKS : []));
+      renderAll();
+      setDirty(false);
+      statusEl.textContent = "已還原成預設作品 ✓";
+      statusEl.className = "status saved";
+    });
+
+    // 產生乾淨的作品資料（去掉暫存的 __x/__y/__size 欄位）
+    function cleanState() {
+      return state.map((w) => ({
+        title: w.title, type: w.type, year: w.year,
+        image: w.image, link: w.link, pos: w.pos, size: w.size
+      }));
+    }
+
+    // 儲存變更：寫進瀏覽器（localStorage）。首頁會即時讀取，不動任何檔案。
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanState()));
+      } catch (e) {
+        statusEl.textContent = "儲存失敗：" + (e && e.message ? e.message : "瀏覽器不允許儲存");
+        statusEl.className = "status dirty";
+        return;
+      }
+      dirty = false;
+      statusEl.textContent = "已儲存 ✓　回作品集首頁重新整理就會看到更新";
+      statusEl.className = "status saved";
+    }
+
+    // 匯出 works.js：發布網站給別人看時，用這個檔案取代專案裡的 works.js
+    function exportFile() {
+      const content =
+        "// 作品資料（由 editor.html 匯出）。發布網站時用此檔取代舊的 works.js。\n" +
+        "window.WORKS = " + JSON.stringify(cleanState(), null, 2) + ";\n";
+      const blob = new Blob([content], { type: "text/javascript" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "works.js";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      statusEl.textContent = "已匯出 works.js ✓　放進網站資料夾取代舊檔即可發布";
+      statusEl.className = "status saved";
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", save);
+    document.getElementById("exportBtn").addEventListener("click", exportFile);
+    window.addEventListener("beforeunload", (e) => {
+      if (dirty) { e.preventDefault(); e.returnValue = ""; }
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
