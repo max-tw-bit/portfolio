@@ -16,7 +16,7 @@ window.WORKS = [
     "title": "活動視覺設計",
     "type": "Visual Design",
     "year": "2025",
-    "image": "images/event-visual/large-ad.png",
+    "image": "images/event-visual/large-ad.jpg",
     "link": "project-2.html",
     "pos": "50% 50%",
     "size": "100%"
