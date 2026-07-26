@@ -13,10 +13,10 @@ window.WORKS = [
     "size": "100%"
   },
   {
-    "title": "作品標題二",
-    "type": "Branding",
+    "title": "活動視覺設計",
+    "type": "Visual Design",
     "year": "2025",
-    "image": "https://via.placeholder.com/640x480.png?text=Project+2",
+    "image": "images/event-visual/large-ad.png",
     "link": "project-2.html",
     "pos": "50% 50%",
     "size": "100%"
