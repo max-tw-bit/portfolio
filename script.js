@@ -47,6 +47,13 @@ if (heroSlides) {
     `<div class="hero-slide${i === 0 ? " is-active" : ""}" style="background-image:url('${escapeHtml(url)}')"></div>`
   ).join("");
 
+  // Fallback for broken images — if background-image fails, show solid color
+  heroSlides.querySelectorAll(".hero-slide").forEach((slide) => {
+    const img = new Image();
+    img.onerror = () => { slide.style.background = "#2a2a2a"; };
+    img.src = slide.style.backgroundImage.slice(5, -2);
+  });
+
   // Auto-rotate
   const slides = heroSlides.querySelectorAll(".hero-slide");
   if (slides.length > 1) {

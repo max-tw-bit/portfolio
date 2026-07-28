@@ -158,6 +158,7 @@
     transition: all 0.15s;
   }
   .hero-item .btn-icon:hover { background: #eee; color: var(--red); }
+  .hero-item .pick-hero-img:hover { color: var(--accent); }
   .hero-item .drag-handle {
     cursor: grab; color: #bbb; font-size: 0.8rem; user-select: none;
     padding: 4px; display: flex; align-items: center;
@@ -414,7 +415,7 @@
           <span class="count" id="heroCount">0 張</span>
         </div>
         <p style="font-size:0.82rem;color:var(--grey);margin-bottom:16px;">
-          管理首頁上方全螢幕輪播的圖片。拖曳左側 ⋮⋮ 可調整順序，直接編輯路徑或貼上新的圖片網址。
+          管理首頁上方全螢幕輪播的圖片。拖曳左側 ⋮⋮ 可調整順序，點擊 📁 從電腦選擇圖片檔案。
         </p>
         <div class="hero-list" id="heroList"></div>
         <div class="toolbar" style="margin-top:14px;">
@@ -550,6 +551,7 @@
           <span class="drag-handle" title="拖曳調整順序">⋮⋮</span>
           <img class="thumb" src="${escapeHtml(url)}" alt="" onerror="this.style.background='#eee'">
           <input class="hero-url" type="text" value="${escapeHtml(url)}" placeholder="輸入圖片路徑…">
+          <button class="btn-icon pick-hero-img" title="從電腦選擇圖片">📁</button>
           <button class="btn-icon del-hero" title="刪除此圖片">✕</button>
         </div>
       `).join("");
@@ -567,6 +569,13 @@
           config.hero.splice(idx, 1);
           renderHero();
           setDirty(true);
+        });
+        item.querySelector(".pick-hero-img").addEventListener("click", () => {
+          pickImage((dataUrl) => {
+            config.hero[idx] = dataUrl;
+            renderHero();
+            setDirty(true);
+          });
         });
         // Drag reorder
         const handle = item.querySelector(".drag-handle");
@@ -652,7 +661,10 @@
           </div>
           <div class="field full">
             <label>圖片路徑</label>
-            <input class="f-image" type="text" value="">
+            <div style="display:flex;gap:8px;">
+              <input class="f-image" type="text" value="" style="flex:1;">
+              <button class="btn-ghost pick-work-img" type="button" title="從電腦選擇圖片" style="white-space:nowrap;font-size:0.72rem;">📁 選擇圖片</button>
+            </div>
           </div>
           <div class="field full">
             <label>點擊後前往的頁面（沒有可留 #）</label>
@@ -741,6 +753,14 @@
         w.image = fImage.value;
         paint();
         setDirty(true);
+      });
+      q(".pick-work-img").addEventListener("click", () => {
+        pickImage((dataUrl) => {
+          fImage.value = dataUrl;
+          w.image = dataUrl;
+          paint();
+          setDirty(true);
+        });
       });
       fLink.addEventListener("input", () => {
         w.link = fLink.value;
@@ -869,6 +889,29 @@
       return String(str).replace(/[&<>"']/g, (c) =>
         ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])
       );
+    }
+
+    // File picker → Data URL (base64) for client-side image upload
+    function pickImage(callback) {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.addEventListener("change", () => {
+        const file = input.files[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) {
+          alert("⚠️ 圖片超過 10MB，建議壓縮後再上傳，以免儲存失敗。");
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          callback(e.target.result); // Data URL
+        };
+        reader.onerror = () => {
+          alert("❌ 讀取圖片失敗，請重試。");
+        };
+        reader.readAsDataURL(file);
+      });
+      input.click();
     }
 
     /* ═══════════════════════════════════════════
