@@ -16,17 +16,91 @@ if (navToggle && navLinks) {
 
 const isHoverCapable = window.matchMedia("(hover: hover)").matches;
 
-// Render the work list.
-// Data source priority: what the editor saved in localStorage → else the
-// defaults in works.js. This way edits made in editor.html appear on the site
-// instantly (same browser) and an empty/broken works.js can't blank the list.
-const WORKS_STORAGE_KEY = "MAX_WORKS";
+/* ═════════════════════════════════════════════
+   Site Config (name, intro, role, contact, hero)
+   ═════════════════════════════════════════════ */
+const CONFIG_KEY = "MAX_SITE_CONFIG";
+
+function getConfig() {
+  try {
+    const saved = localStorage.getItem(CONFIG_KEY);
+    if (saved) {
+      const obj = JSON.parse(saved);
+      if (obj && obj.site) return obj;
+    }
+  } catch (_) {}
+  return window.SITE_CONFIG || { site: {}, contact: {}, hero: [] };
+}
 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (c) => (
     { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]
   ));
 }
+
+// ── Render hero carousel ──
+const heroSlides = document.getElementById("heroSlides");
+if (heroSlides) {
+  const config = getConfig();
+  const images = config.hero && config.hero.length ? config.hero : ["images/EVA/eva-hero.jpg"];
+  heroSlides.innerHTML = images.map((url, i) =>
+    `<div class="hero-slide${i === 0 ? " is-active" : ""}" style="background-image:url('${escapeHtml(url)}')"></div>`
+  ).join("");
+
+  // Auto-rotate
+  const slides = heroSlides.querySelectorAll(".hero-slide");
+  if (slides.length > 1) {
+    let current = 0;
+    setInterval(() => {
+      current = (current + 1) % slides.length;
+      slides.forEach((slide, i) => slide.classList.toggle("is-active", i === current));
+    }, 4500);
+  }
+}
+
+// ── Render intro text ──
+const introEl = document.getElementById("introText");
+if (introEl) {
+  const config = getConfig();
+  const intro = config.site && config.site.intro
+    ? config.site.intro
+    : "我是一位設計師。相信簡潔、有節奏的排版與細節，能讓作品更有說服力。目前接受合作與委託專案。";
+  // Split into spans at each sentence boundary for styling flexibility
+  const parts = intro.split(/(?<=[。！？])/).filter(Boolean);
+  introEl.innerHTML = parts.map((p) => `<span>${escapeHtml(p.trim())}</span>`).join(" ");
+}
+
+// ── Render role ──
+const roleEl = document.getElementById("roleText");
+if (roleEl) {
+  const config = getConfig();
+  roleEl.textContent = (config.site && config.site.role) || "Frontend Engineer / Visual Design";
+}
+
+// ── Render contact list ──
+const contactList = document.getElementById("contactList");
+if (contactList) {
+  const config = getConfig();
+  const c = config.contact || {};
+  const items = [];
+  if (c.email) {
+    items.push(`<li><a href="mailto:${escapeHtml(c.email)}">${escapeHtml(c.email)}</a></li>`);
+  }
+  if (c.github) {
+    const url = c.github.includes("github.com") ? c.github : `https://github.com/${c.github}`;
+    items.push(`<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">GitHub</a></li>`);
+  }
+  if (c.linkedin) {
+    const url = c.linkedin.includes("linkedin.com") ? c.linkedin : `https://www.linkedin.com/in/${c.linkedin}`;
+    items.push(`<li><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>`);
+  }
+  contactList.innerHTML = items.join("");
+}
+
+/* ═════════════════════════════════════════════
+   Work List
+   ═════════════════════════════════════════════ */
+const WORKS_STORAGE_KEY = "MAX_WORKS";
 
 function getWorks() {
   try {
@@ -56,20 +130,9 @@ if (workList) {
   }).join("");
 }
 
-// Full-screen hero carousel (auto-rotate only)
-const heroSlides = document.querySelectorAll(".hero-slide");
-
-if (heroSlides.length > 1) {
-  let current = 0;
-  const INTERVAL = 4500;
-
-  setInterval(() => {
-    current = (current + 1) % heroSlides.length;
-    heroSlides.forEach((slide, i) => slide.classList.toggle("is-active", i === current));
-  }, INTERVAL);
-}
-
-// Inverted circular cursor that follows the pointer (desktop only)
+/* ═════════════════════════════════════════════
+   Custom cursor (desktop only)
+   ═════════════════════════════════════════════ */
 const cursorDot = document.getElementById("cursorDot");
 
 if (isHoverCapable && cursorDot) {

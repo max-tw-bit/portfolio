@@ -19,6 +19,7 @@
           <li><a href="#about">Info</a></li>
           <li><a href="#work">Index</a></li>
           <li><a href="#contact">Contact</a></li>
+          <li><a href="admin.html" target="_blank" title="管理後台">⚙️</a></li>
         </ul>
       </nav>
       <button class="nav-toggle" id="navToggle" aria-label="開啟選單">
@@ -29,24 +30,16 @@
 
   <main id="top">
 
-    <!-- 全螢幕輪播 -->
+    <!-- 全螢幕輪播 (由 script.js 動態渲染) -->
     <section class="hero" id="hero">
-      <div class="hero-slides" id="heroSlides">
-        <div class="hero-slide is-active" style="background-image:url('images/EVA/eva-hero.jpg')"></div>
-        <div class="hero-slide" style="background-image:url('images/EVA/eva-plane.jpg')"></div>
-        <div class="hero-slide" style="background-image:url('images/EVA/eva-van.jpg')"></div>
-        <div class="hero-slide" style="background-image:url('images/EVA/eva-signage.jpg')"></div>
-      </div>
+      <div class="hero-slides" id="heroSlides"></div>
     </section>
 
-    <!-- 自我介紹 -->
+    <!-- 自我介紹 (由 script.js 動態渲染) -->
     <section id="about" class="section about">
       <p class="eyebrow"><span class="accent-text">01</span> — Info</p>
-      <h1 class="intro">
-        <span>我是一位設計師。</span>
-        相信簡潔、有節奏的排版與細節，能讓作品更有說服力。目前接受合作與委託專案。
-      </h1>
-      <p class="role">Frontend Engineer / Visual Design</p>
+      <h1 class="intro" id="introText"></h1>
+      <p class="role" id="roleText"></p>
     </section>
 
     <!-- 作品 -->
@@ -56,14 +49,10 @@
       <ul class="work-list" id="workList"></ul>
     </section>
 
-    <!-- 聯絡方式  -->
+    <!-- 聯絡方式 (由 script.js 動態渲染) -->
     <section id="contact" class="section contact">
       <p class="eyebrow"><span class="accent-text">03</span> — Contact</p>
-      <ul class="contact-list">
-        <li><a href="mailto:you@example.com">you@example.com</a></li>
-        <li><a href="https://github.com/yourname" target="_blank" rel="noopener noreferrer">GitHub</a></li>
-        <li><a href="https://www.linkedin.com/in/yourname" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
-      </ul>
+      <ul class="contact-list" id="contactList"></ul>
     </section>
 
   </main>
@@ -75,6 +64,7 @@
           <li><a href="#about">Info</a></li>
           <li><a href="#work">Index</a></li>
           <li><a href="#contact">Contact</a></li>
+          <li><a href="admin.html" target="_blank" title="管理後台">⚙️</a></li>
         </ul>
       </nav>
       <span class="copyright">&copy; <span id="year"></span> Max</span>
@@ -84,6 +74,7 @@
   <div class="cursor-dot" id="cursorDot"></div>
 
   <script src="works.js"></script>
+  <script src="config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

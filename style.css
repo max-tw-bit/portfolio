@@ -136,6 +136,20 @@ ul {
   width: 100%;
 }
 
+.bar-links a[title="管理後台"] {
+  font-size: 1rem;
+  opacity: 0.3;
+  transition: opacity 0.2s ease;
+}
+
+.bar-links a[title="管理後台"]:hover {
+  opacity: 0.8;
+}
+
+.bar-links a[title="管理後台"]::after {
+  display: none;
+}
+
 .copyright {
   font-size: 0.75rem;
   color: var(--grey);

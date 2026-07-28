@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>管理後台 — Max</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --white: #ffffff;
+    --black: #111111;
+    --grey: #6e6e6e;
+    --line: #d9d9d9;
+    --accent: #ff5a36;
+    --accent-light: #fff0eb;
+    --green: #2e7d32;
+    --red: #c0392b;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Noto Sans TC", "Helvetica Neue", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    background: #f8f8f8;
+    color: var(--black);
+    line-height: 1.6;
+    padding-bottom: 120px;
+  }
+
+  /* ── Header ── */
+  .admin-header {
+    position: sticky; top: 0; z-index: 200;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .admin-header-inner {
+    max-width: 1100px; margin: 0 auto;
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .admin-mark {
+    display: flex; align-items: center; gap: 14px;
+  }
+  .admin-mark .brand {
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .admin-mark .badge {
+    font-size: 0.68rem; font-weight: 500;
+    background: var(--black); color: var(--white);
+    padding: 3px 10px; border-radius: 20px;
+    letter-spacing: 0.04em;
+  }
+  .admin-header-actions {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .admin-header-actions a {
+    font-size: 0.78rem; color: var(--grey); text-decoration: none;
+    transition: color 0.2s;
+  }
+  .admin-header-actions a:hover { color: var(--accent); }
+
+  /* ── Layout ── */
+  .admin-wrap {
+    max-width: 1100px; margin: 0 auto; padding: 40px 28px;
+  }
+  .admin-title {
+    font-size: 1.6rem; font-weight: 500; letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+  .admin-sub {
+    font-size: 0.86rem; color: var(--grey); margin-bottom: 36px;
+  }
+
+  /* ── Section cards ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--shadow);
+  }
+  .section-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 22px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .section-card-header h2 {
+    font-size: 1rem; font-weight: 600; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-card-header .icon {
+    font-size: 1.2rem;
+  }
+  .section-card-header .count {
+    font-size: 0.72rem; color: var(--grey);
+    background: #f0f0f0; padding: 2px 10px; border-radius: 12px;
+  }
+
+  /* ── Fields ── */
+  .field-group {
+    display: grid; gap: 16px 24px;
+  }
+  .field-group.cols-2 { grid-template-columns: 1fr 1fr; }
+  .field-group.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .field-group.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .field-group .full { grid-column: 1 / -1; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label {
+    font-size: 0.74rem; font-weight: 500; letter-spacing: 0.04em;
+    color: var(--grey);
+  }
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%; font-family: inherit; font-size: 0.9rem;
+    padding: 10px 13px; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--white); color: var(--black);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    outline: none; border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(255,90,54,0.1);
+  }
+  .field textarea {
+    min-height: 90px; resize: vertical; line-height: 1.7;
+  }
+  .field input[type="url"] { font-size: 0.85rem; }
+
+  /* ── Hero image list ── */
+  .hero-list {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .hero-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;
+    background: #fafafa; transition: border-color 0.2s;
+  }
+  .hero-item:hover { border-color: #bbb; }
+  .hero-item .thumb {
+    width: 64px; height: 48px; border-radius: 4px; object-fit: cover;
+    background: #eee; flex-shrink: 0;
+  }
+  .hero-item .hero-url {
+    flex: 1; font-size: 0.82rem; border: none; background: transparent;
+    padding: 6px 4px; font-family: inherit; color: var(--black);
+  }
+  .hero-item .hero-url:focus { outline: none; }
+  .hero-item .btn-icon {
+    background: none; border: none; cursor: pointer; font-size: 0.9rem;
+    padding: 4px 8px; border-radius: 4px; color: var(--grey);
+    transition: all 0.15s;
+  }
+  .hero-item .btn-icon:hover { background: #eee; color: var(--red); }
+  .hero-item .drag-handle {
+    cursor: grab; color: #bbb; font-size: 0.8rem; user-select: none;
+    padding: 4px; display: flex; align-items: center;
+  }
+  .hero-item .drag-handle:active { cursor: grabbing; }
+
+  /* ── Works ── */
+  .work-card {
+    border: 1px solid var(--line); border-radius: 8px;
+    padding: 20px 22px; margin-bottom: 16px;
+    background: #fcfcfc; transition: border-color 0.2s;
+  }
+  .work-card:hover { border-color: #c0c0c0; }
+  .work-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .work-card-header .num {
+    font-size: 0.72rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--grey);
+    background: #f0f0f0; padding: 2px 12px; border-radius: 12px;
+  }
+
+  /* ── WYSIWYG band (image preview) ── */
+  .band-wrap {
+    margin: 18px 0 10px;
+  }
+  .band {
+    position: relative; height: 140px; overflow: hidden;
+    cursor: grab; user-select: none;
+    border: 1px solid var(--line); border-radius: 6px; background: #f4f4f4;
+  }
+  .band.dragging { cursor: grabbing; }
+  .band-img {
+    position: absolute; inset: 0;
+    background-repeat: no-repeat;
+  }
+  .band-overlay {
+    position: absolute; inset: 0;
+    display: flex; align-items: center;
+    justify-content: space-between; padding: 0 28px; pointer-events: none;
+  }
+  .band-title {
+    font-size: clamp(1rem, 2.8vw, 1.6rem); font-weight: 500; letter-spacing: -0.01em;
+    color: #eee; mix-blend-mode: difference;
+  }
+  .band-meta {
+    font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+    color: #919191; mix-blend-mode: difference; white-space: nowrap;
+  }
+  .band-hint {
+    font-size: 0.68rem; color: var(--grey); margin: 5px 2px 14px;
+  }
+
+  /* ── Sliders ── */
+  .slider-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px 20px;
+  }
+  .slider-item label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 0.72rem; letter-spacing: 0.04em; color: var(--grey);
+    margin-bottom: 4px;
+  }
+  .slider-item label b { color: var(--black); font-variant-numeric: tabular-nums; }
+  input[type=range] {
+    width: 100%; accent-color: var(--accent); cursor: pointer;
+    height: 4px; appearance: none; background: var(--line); border-radius: 2px;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    appearance: none; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--accent); border: 2px solid var(--white);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25); cursor: pointer;
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    font-family: inherit; font-size: 0.8rem; font-weight: 600;
+    letter-spacing: 0.03em; padding: 9px 20px; border-radius: 6px;
+    border: 1px solid var(--black); background: var(--black); color: var(--white);
+    cursor: pointer; transition: all 0.2s ease;
+  }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn-ghost {
+    background: none; color: var(--grey); border-color: var(--line);
+  }
+  .btn-ghost:hover { color: var(--black); border-color: var(--black); opacity: 1; }
+  .btn-danger {
+    background: none; color: var(--red); border-color: #e6b3ac;
+    padding: 6px 14px; font-size: 0.72rem; font-weight: 500;
+  }
+  .btn-danger:hover {
+    background: var(--red); color: #fff; border-color: var(--red); opacity: 1;
+  }
+  .btn-sm { padding: 6px 14px; font-size: 0.72rem; }
+  .btn-accent {
+    background: var(--accent); border-color: var(--accent); color: var(--white);
+  }
+  .btn-accent:hover { opacity: 0.9; }
+
+  .toolbar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    margin-top: 6px;
+  }
+
+  /* ── Save bar ── */
+  .savebar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+    background: rgba(255,255,255,0.97);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--line);
+    padding: 14px 28px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .savebar-left { display: flex; align-items: center; gap: 16px; }
+  .savebar .status { font-size: 0.8rem; color: var(--grey); }
+  .savebar .status.dirty { color: var(--accent); font-weight: 600; }
+  .savebar .status.saved { color: var(--green); font-weight: 600; }
+  .savebar .status.error { color: var(--red); font-weight: 600; }
+  .save-actions { display: flex; gap: 10px; }
+  .btn-save { padding: 11px 28px; font-size: 0.86rem; }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex; gap: 0; margin-bottom: 28px;
+    border-bottom: 1px solid var(--line);
+  }
+  .tab {
+    padding: 12px 24px; font-size: 0.85rem; font-weight: 500;
+    color: var(--grey); cursor: pointer; border: none; background: none;
+    border-bottom: 2px solid transparent; font-family: inherit;
+    transition: all 0.2s; position: relative; bottom: -1px;
+  }
+  .tab:hover { color: var(--black); }
+  .tab.active {
+    color: var(--black); border-bottom-color: var(--accent);
+  }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .admin-wrap { padding: 24px 16px; }
+    .section-card { padding: 20px 18px; }
+    .field-group.cols-2,
+    .field-group.cols-3,
+    .field-group.cols-4 { grid-template-columns: 1fr; }
+    .slider-grid { grid-template-columns: 1fr; }
+    .admin-header-inner { padding: 12px 16px; }
+    .tabs { overflow-x: auto; gap: 0; }
+    .tab { padding: 10px 16px; white-space: nowrap; font-size: 0.8rem; }
+    .band { height: 100px; }
+    .savebar { flex-direction: column; gap: 10px; padding: 12px 16px; }
+    .savebar-left { width: 100%; }
+    .save-actions { width: 100%; }
+    .btn-save { flex: 1; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+  <header class="admin-header">
+    <div class="admin-header-inner">
+      <div class="admin-mark">
+        <span class="brand">Max</span>
+        <span class="badge">管理後台</span>
+      </div>
+      <div class="admin-header-actions">
+        <a href="index.html" target="_blank">⬅ 回到作品集</a>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+    <h1 class="admin-title">網站管理</h1>
+    <p class="admin-sub">修改網站名稱、自我介紹、作品與圖片設定，所有變更會暫存在此瀏覽器。</p>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="settings">📋 網站設定</button>
+      <button class="tab" data-tab="works">🎨 作品管理</button>
+      <button class="tab" data-tab="hero">🖼️ 輪播管理</button>
+    </div>
+
+    <!-- ═══ Tab: 網站設定 ═══ -->
+    <div class="tab-content active" id="tab-settings">
+
+      <!-- Site Info -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <h2><span class="icon">✏️</span> 基本資訊</h2>
+        </div>
+        <div class="field-group cols-2">
+          <div class="field">
+            <label>網站名稱</label>
+            <input type="text" id="siteName" placeholder="Max">
+          </div>
+          <div class="field">
+            <label>職稱 / 角色</label>
+            <input type="text" id="siteRole" placeholder="Frontend Engineer / Visual Design">
+          </div>
+          <div class="field full">
+            <label>自我介紹</label>
+            <textarea id="siteIntro" placeholder="輸入自我介紹文字…"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <h2><span class="icon">📬</span> 聯絡資訊</h2>
+        </div>
+        <div class="field-group cols-3">
+          <div class="field">
+            <label>Email</label>
+            <input type="email" id="contactEmail" placeholder="you@example.com">
+          </div>
+          <div class="field">
+            <label>GitHub 使用者名稱</label>
+            <input type="text" id="contactGithub" placeholder="yourname">
+          </div>
+          <div class="field">
+            <label>LinkedIn 使用者名稱</label>
+            <input type="text" id="contactLinkedin" placeholder="yourname">
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ═══ Tab: 作品管理 ═══ -->
+    <div class="tab-content" id="tab-works">
+      <div class="section-card">
+        <div class="section-card-header">
+          <h2><span class="icon">🎨</span> 作品列表</h2>
+          <span class="count" id="workCount">0 個作品</span>
+        </div>
+
+        <div id="worksContainer"></div>
+
+        <div class="toolbar">
+          <button class="btn-ghost" id="addWorkBtn">＋ 新增作品</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ Tab: 輪播管理 ═══ -->
+    <div class="tab-content" id="tab-hero">
+      <div class="section-card">
+        <div class="section-card-header">
+          <h2><span class="icon">🖼️</span> 主視覺輪播</h2>
+          <span class="count" id="heroCount">0 張</span>
+        </div>
+        <p style="font-size:0.82rem;color:var(--grey);margin-bottom:16px;">
+          管理首頁上方全螢幕輪播的圖片。拖曳左側 ⋮⋮ 可調整順序，直接編輯路徑或貼上新的圖片網址。
+        </p>
+        <div class="hero-list" id="heroList"></div>
+        <div class="toolbar" style="margin-top:14px;">
+          <button class="btn-ghost" id="addHeroBtn">＋ 新增圖片</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══ Save bar ═══ -->
+  <div class="savebar">
+    <div class="savebar-left">
+      <span class="status" id="status">尚未變更</span>
+    </div>
+    <div class="save-actions">
+      <button class="btn-ghost" id="resetBtn">還原預設</button>
+      <button class="btn-ghost" id="exportBtn">📤 匯出設定</button>
+      <button class="btn btn-save" id="saveBtn">💾 儲存全部變更</button>
+    </div>
+  </div>
+
+  <script src="works.js"></script>
+  <script src="config.js"></script>
+  <script>
+    /* ═══════════════════════════════════════════
+       Admin Dashboard — Site Config & Works
+       ═══════════════════════════════════════════ */
+
+    const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+
+    // ── Storage keys ──
+    const CONFIG_KEY = "MAX_SITE_CONFIG";
+    const WORKS_KEY  = "MAX_WORKS";
+
+    // ── Load helpers ──
+    function loadConfig() {
+      try {
+        const saved = localStorage.getItem(CONFIG_KEY);
+        if (saved) {
+          const obj = JSON.parse(saved);
+          if (obj && obj.site) return obj;
+        }
+      } catch (_) {}
+      return JSON.parse(JSON.stringify(
+        window.SITE_CONFIG || { site: {}, contact: {}, hero: [] }
+      ));
+    }
+
+    function loadWorks() {
+      try {
+        const saved = localStorage.getItem(WORKS_KEY);
+        if (saved) {
+          const arr = JSON.parse(saved);
+          if (Array.isArray(arr) && arr.length) return arr;
+        }
+      } catch (_) {}
+      return Array.isArray(window.WORKS) ? JSON.parse(JSON.stringify(window.WORKS)) : [];
+    }
+
+    // ── State ──
+    let config = loadConfig();
+    let works  = loadWorks();
+    let dirty  = false;
+
+    const statusEl = document.getElementById("status");
+
+    function setDirty(v) {
+      dirty = v;
+      if (v) {
+        statusEl.textContent = "⚠️ 有未儲存的變更";
+        statusEl.className = "status dirty";
+      } else {
+        statusEl.textContent = "✅ 所有變更已儲存";
+        statusEl.className = "status saved";
+      }
+    }
+
+    // ── Tab switching ──
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".tab-content").forEach((c) => c.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("tab-" + tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    /* ═══════════════════════════════════════════
+       Site Settings Tab
+       ═══════════════════════════════════════════ */
+    const el = (id) => document.getElementById(id);
+
+    function renderSettings() {
+      const s = config.site || {};
+      el("siteName").value   = s.name || "";
+      el("siteIntro").value  = s.intro || "";
+      el("siteRole").value   = s.role || "";
+      const c = config.contact || {};
+      el("contactEmail").value    = c.email || "";
+      el("contactGithub").value   = c.github || "";
+      el("contactLinkedin").value = c.linkedin || "";
+    }
+
+    function collectSettings() {
+      config.site = {
+        name:  el("siteName").value,
+        intro: el("siteIntro").value,
+        role:  el("siteRole").value
+      };
+      config.contact = {
+        email:    el("contactEmail").value,
+        github:   el("contactGithub").value,
+        linkedin: el("contactLinkedin").value
+      };
+    }
+
+    // Listen to changes
+    ["siteName","siteIntro","siteRole","contactEmail","contactGithub","contactLinkedin"]
+      .forEach((id) => {
+        el(id).addEventListener("input", () => { collectSettings(); setDirty(true); });
+      });
+
+    /* ═══════════════════════════════════════════
+       Hero Carousel Tab
+       ═══════════════════════════════════════════ */
+    function renderHero() {
+      const list = el("heroList");
+      const arr = config.hero || [];
+      el("heroCount").textContent = arr.length + " 張";
+      list.innerHTML = arr.map((url, i) => `
+        <div class="hero-item" data-index="${i}">
+          <span class="drag-handle" title="拖曳調整順序">⋮⋮</span>
+          <img class="thumb" src="${escapeHtml(url)}" alt="" onerror="this.style.background='#eee'">
+          <input class="hero-url" type="text" value="${escapeHtml(url)}" placeholder="輸入圖片路徑…">
+          <button class="btn-icon del-hero" title="刪除此圖片">✕</button>
+        </div>
+      `).join("");
+
+      // Individual event listeners
+      list.querySelectorAll(".hero-item").forEach((item, idx) => {
+        const inp = item.querySelector(".hero-url");
+        inp.addEventListener("input", () => {
+          config.hero[idx] = inp.value;
+          const thumb = item.querySelector(".thumb");
+          thumb.src = inp.value;
+          setDirty(true);
+        });
+        item.querySelector(".del-hero").addEventListener("click", () => {
+          config.hero.splice(idx, 1);
+          renderHero();
+          setDirty(true);
+        });
+        // Drag reorder
+        const handle = item.querySelector(".drag-handle");
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const startY = e.clientY;
+          const startIdx = idx;
+          const el = item;
+          el.style.opacity = "0.5";
+          const onMove = (me) => {
+            const dy = me.clientY - startY;
+            const items = [...list.querySelectorAll(".hero-item")];
+            const targetIdx = clamp(startIdx + Math.round(dy / 56), 0, items.length - 1);
+            if (targetIdx !== startIdx) {
+              const [moved] = config.hero.splice(startIdx, 1);
+              config.hero.splice(targetIdx, 0, moved);
+              renderHero();
+              setDirty(true);
+            }
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+          const onUp = () => {
+            el.style.opacity = "1";
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+        });
+      });
+    }
+
+    el("addHeroBtn").addEventListener("click", () => {
+      if (!config.hero) config.hero = [];
+      config.hero.push("https://via.placeholder.com/1600x900.png?text=New+Hero");
+      renderHero();
+      setDirty(true);
+    });
+
+    /* ═══════════════════════════════════════════
+       Works Tab
+       ═══════════════════════════════════════════ */
+    function renderWorks() {
+      const container = el("worksContainer");
+      el("workCount").textContent = works.length + " 個作品";
+      container.innerHTML = "";
+      works.forEach((w, i) => container.appendChild(buildWorkCard(w, i)));
+    }
+
+    function parsePos(pos) {
+      const m = String(pos || "50% 50%").match(/(-?\d+(?:\.\d+)?)%\s+(-?\d+(?:\.\d+)?)%/);
+      return m ? { x: +m[1], y: +m[2] } : { x: 50, y: 50 };
+    }
+    function parseSize(size) {
+      const m = String(size || "100%").match(/(\d+(?:\.\d+)?)%/);
+      return m ? +m[1] : 100;
+    }
+
+    function buildWorkCard(w, i) {
+      const p = parsePos(w.pos);
+      const size = parseSize(w.size);
+
+      const card = document.createElement("div");
+      card.className = "work-card";
+      card.innerHTML = `
+        <div class="work-card-header">
+          <span class="num">作品 ${i + 1}</span>
+          <button class="btn-danger del-work">刪除</button>
+        </div>
+        <div class="field-group cols-4">
+          <div class="field full">
+            <label>作品名稱</label>
+            <input class="f-title" type="text" value="">
+          </div>
+          <div class="field">
+            <label>種類</label>
+            <input class="f-type" type="text" value="">
+          </div>
+          <div class="field">
+            <label>年份</label>
+            <input class="f-year" type="text" value="">
+          </div>
+          <div class="field full">
+            <label>圖片路徑</label>
+            <input class="f-image" type="text" value="">
+          </div>
+          <div class="field full">
+            <label>點擊後前往的頁面（沒有可留 #）</label>
+            <input class="f-link" type="text" value="">
+          </div>
+        </div>
+
+        <div class="band-wrap">
+          <div class="band">
+            <div class="band-img"></div>
+            <div class="band-overlay">
+              <span class="band-title"></span>
+              <span class="band-meta"></span>
+            </div>
+          </div>
+          <p class="band-hint">← 在圖片上按住拖曳即可移動顯示位置 →</p>
+          <div class="slider-grid">
+            <div class="slider-item">
+              <label>水平 X <b class="vx"></b></label>
+              <input type="range" class="rx" min="0" max="100" step="1">
+            </div>
+            <div class="slider-item">
+              <label>垂直 Y <b class="vy"></b></label>
+              <input type="range" class="ry" min="0" max="100" step="1">
+            </div>
+            <div class="slider-item">
+              <label>縮放 <b class="vs"></b></label>
+              <input type="range" class="rs" min="100" max="260" step="5">
+            </div>
+          </div>
+        </div>
+      `;
+
+      const q = (s) => card.querySelector(s);
+      const fTitle = q(".f-title"), fType = q(".f-type"), fYear = q(".f-year");
+      const fImage = q(".f-image"), fLink = q(".f-link");
+      const band = q(".band"), bandImg = q(".band-img");
+      const bandTitle = q(".band-title"), bandMeta = q(".band-meta");
+      const rx = q(".rx"), ry = q(".ry"), rs = q(".rs");
+      const vx = q(".vx"), vy = q(".vy"), vs = q(".vs");
+
+      fTitle.value = w.title || "";
+      fType.value  = w.type || "";
+      fYear.value  = w.year || "";
+      fImage.value = w.image || "";
+      fLink.value  = w.link || "";
+      rx.value = p.x; ry.value = p.y; rs.value = size;
+
+      // Internal state for this card
+      w.__x = p.x; w.__y = p.y; w.__size = size;
+
+      const paint = () => {
+        const img = w.image || "";
+        bandImg.style.backgroundImage = img ? `url('${img.replace(/'/g, "\\'")}')` : "none";
+        bandImg.style.backgroundSize    = w.__size + "%";
+        bandImg.style.backgroundPosition = w.__x + "% " + w.__y + "%";
+        bandTitle.textContent = w.title || "作品名稱";
+        bandMeta.textContent  = (w.type || "類型") + " — " + (w.year || "年份");
+        vx.textContent = w.__x + "%";
+        vy.textContent = w.__y + "%";
+        vs.textContent  = w.__size + "%";
+      };
+
+      const commit = () => {
+        w.pos  = w.__x + "% " + w.__y + "%";
+        w.size = w.__size + "%";
+        setDirty(true);
+      };
+
+      fTitle.addEventListener("input", () => {
+        w.title = fTitle.value;
+        bandTitle.textContent = w.title || "作品名稱";
+        setDirty(true);
+      });
+      fType.addEventListener("input", () => {
+        w.type = fType.value;
+        bandMeta.textContent = (w.type || "類型") + " — " + (w.year || "年份");
+        setDirty(true);
+      });
+      fYear.addEventListener("input", () => {
+        w.year = fYear.value;
+        bandMeta.textContent = (w.type || "類型") + " — " + (w.year || "年份");
+        setDirty(true);
+      });
+      fImage.addEventListener("input", () => {
+        w.image = fImage.value;
+        paint();
+        setDirty(true);
+      });
+      fLink.addEventListener("input", () => {
+        w.link = fLink.value;
+        setDirty(true);
+      });
+
+      rx.addEventListener("input", () => { w.__x = +rx.value; paint(); commit(); });
+      ry.addEventListener("input", () => { w.__y = +ry.value; paint(); commit(); });
+      rs.addEventListener("input", () => { w.__size = +rs.value; paint(); commit(); });
+
+      // Drag to adjust position
+      let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      band.addEventListener("mousedown", (e) => {
+        dragging = true; band.classList.add("dragging");
+        sx = e.clientX; sy = e.clientY; ox = w.__x; oy = w.__y;
+      });
+      window.addEventListener("mousemove", (e) => {
+        if (!dragging) return;
+        const rect = band.getBoundingClientRect();
+        w.__x = clamp(Math.round(ox - (e.clientX - sx) / rect.width * 100), 0, 100);
+        w.__y = clamp(Math.round(oy - (e.clientY - sy) / rect.height * 100), 0, 100);
+        rx.value = w.__x; ry.value = w.__y;
+        paint(); commit();
+      });
+      window.addEventListener("mouseup", () => {
+        dragging = false; band.classList.remove("dragging");
+      });
+
+      q(".del-work").addEventListener("click", () => {
+        if (!confirm(`確定要刪除「${w.title || "此作品"}」嗎？`)) return;
+        works.splice(i, 1);
+        renderWorks();
+        setDirty(true);
+      });
+
+      paint();
+      return card;
+    }
+
+    el("addWorkBtn").addEventListener("click", () => {
+      works.push({
+        title: "新作品", type: "Branding", year: new Date().getFullYear().toString(),
+        image: "images/EVA/eva-hero.jpg", link: "#", pos: "50% 50%", size: "100%"
+      });
+      renderWorks();
+      setDirty(true);
+      el("tab-works").scrollIntoView({ behavior: "smooth" });
+    });
+
+    /* ═══════════════════════════════════════════
+       Save / Export / Reset
+       ═══════════════════════════════════════════ */
+    function cleanWorks() {
+      return works.map((w) => ({
+        title: w.title, type: w.type, year: w.year,
+        image: w.image, link: w.link, pos: w.pos, size: w.size
+      }));
+    }
+
+    function saveAll() {
+      collectSettings();
+      try {
+        localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
+        localStorage.setItem(WORKS_KEY,  JSON.stringify(cleanWorks()));
+      } catch (e) {
+        statusEl.textContent = "❌ 儲存失敗：" + (e.message || "瀏覽器不允許");
+        statusEl.className = "status error";
+        return;
+      }
+      setDirty(false);
+    }
+
+    el("saveBtn").addEventListener("click", saveAll);
+
+    el("resetBtn").addEventListener("click", () => {
+      if (!confirm("還原成預設設定？（會清除此瀏覽器儲存的所有編輯內容）")) return;
+      try { localStorage.removeItem(CONFIG_KEY); } catch (_) {}
+      try { localStorage.removeItem(WORKS_KEY); } catch (_) {}
+      config = loadConfig();
+      works  = loadWorks();
+      renderSettings();
+      renderWorks();
+      renderHero();
+      setDirty(false);
+      statusEl.textContent = "✅ 已還原成預設值";
+      statusEl.className = "status saved";
+    });
+
+    el("exportBtn").addEventListener("click", () => {
+      collectSettings();
+      const exportData = {
+        config: JSON.parse(JSON.stringify(config)),
+        works: cleanWorks()
+      };
+      const exportDate = new Date().toISOString().slice(0,10);
+      const content =
+        `// 網站完整設定（由 admin.html 匯出，${exportDate}）\n` +
+        "// 將此檔案取代專案中的 config.js 與 works.js 即可發布。\n\n" +
+        "window.SITE_CONFIG = " + JSON.stringify(exportData.config, null, 2) + ";\n\n" +
+        "window.WORKS = " + JSON.stringify(exportData.works, null, 2) + ";\n";
+      const blob = new Blob([content], { type: "text/javascript" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "site-export.js";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      statusEl.textContent = "📤 已匯出！請將內容分別貼到 config.js 與 works.js";
+      statusEl.className = "status saved";
+    });
+
+    // Warn before leaving with unsaved changes
+    window.addEventListener("beforeunload", (e) => {
+      if (dirty) { e.preventDefault(); e.returnValue = ""; }
+    });
+
+    // Keyboard shortcut: Ctrl+S / Cmd+S to save
+    window.addEventListener("keydown", (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        saveAll();
+      }
+    });
+
+    // Escape HTML for display
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, (c) =>
+        ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c])
+      );
+    }
+
+    /* ═══════════════════════════════════════════
+       Init
+       ═══════════════════════════════════════════ */
+    renderSettings();
+    renderWorks();
+    renderHero();
+  </script>
+</body>
+</html>
